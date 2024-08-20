@@ -6,7 +6,7 @@ from view_categorization import categorization_view
 
 
 async def main(page: flet.Page):
-    page.title = 'PossessionTracker'
+    page.title = 'Мои принадлежности'
 
     views: dict[str, flet.View] = {
         '/': root_view,

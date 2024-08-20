@@ -9,7 +9,7 @@ from ui_callbacks import (
 def get_appbar() -> flet.AppBar:
     return flet.AppBar(
         leading=flet.Image('in_app_icon.png', scale=0.8),
-        title=flet.Text('PossessionTracker')
+        title=flet.Text('Мои принадлежности')
     )
 
 
