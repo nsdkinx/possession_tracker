@@ -3,8 +3,7 @@ import flet
 from tag_color import TagColor
 from ui_providers import (
     get_appbar,
-    navigation_bar,
-    get_floating_action_button
+    navigation_bar
 )
 
 from ui_tag import get_tag_widget
@@ -424,7 +423,6 @@ categorization_view = flet.View(
     route='/categorization',
 
     appbar=get_appbar(),
-    floating_action_button=get_floating_action_button(),
     navigation_bar=navigation_bar,
     scroll=flet.ScrollMode.ALWAYS,
 
