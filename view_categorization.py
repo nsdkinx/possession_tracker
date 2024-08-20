@@ -76,7 +76,11 @@ async def _on_tag_click_callback(event: flet.ControlEvent):
         name = new_name_field.value
         color = new_color_dropdown.value
 
-        # tag = tag_manager.add_tag(label=name, color=color)
+        tag_manager.edit_tag(
+            tag=tag_manager.get_tag_by_name(tag_control.content.value),
+            name=name,
+            color=color
+        )
 
         page.open(flet.SnackBar(flet.Text('Тег изменён!')))
         page.close(dialog)

@@ -25,7 +25,11 @@ class TagManager:
                 self._tags.remove(tag_)
     
     def edit_tag(self, tag: Tag, name: str, color: TagColor) -> Tag:
-        raise NotImplementedError  # TODO when migrate to better storage
+        for tag_ in self._tags:
+            if tag_.label == tag.label:
+                tag_.label = name
+                tag_.color = color
+                return tag_
 
     def get_tag_by_id(self, id: str) -> Tag | None:
         for tag in self._tags:
