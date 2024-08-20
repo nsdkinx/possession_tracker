@@ -20,7 +20,9 @@ class TagManager:
         return tag
     
     def remove_tag(self, tag: Tag):
-        self._tags.remove(tag)
+        for tag_ in self._tags:
+            if tag.label == tag_.label:
+                self._tags.remove(tag_)
     
     def edit_tag(self, tag: Tag, name: str, color: TagColor) -> Tag:
         raise NotImplementedError  # TODO when migrate to better storage
@@ -28,5 +30,11 @@ class TagManager:
     def get_tag_by_id(self, id: str) -> Tag | None:
         for tag in self._tags:
             if tag.id == id:
+                return tag
+        return None
+
+    def get_tag_by_name(self, name: str) -> Tag | None:
+        for tag in self._tags:
+            if tag.label == name:
                 return tag
         return None

@@ -31,6 +31,32 @@ async def _on_tag_click_callback(event: flet.ControlEvent):
     page: flet.Page = event.page
     tag_control: flet.Container = event.control.content
 
+    async def _remove_tag_callback(event: flet.ControlEvent):
+        async def _on_cancel_button_callback(event: flet.ControlEvent):
+            page.close(remove_tag_dialog)
+
+        async def _confirm_button_callback(event: flet.ControlEvent):
+            tag = tag_manager.get_tag_by_name(tag_control.content.value)
+            tag_manager.remove_tag(tag)
+
+            page.open(flet.SnackBar(flet.Text('Тег удалён!')))
+            page.close(remove_tag_dialog)
+
+            populate_inner_tags()
+
+        remove_tag_dialog = flet.AlertDialog(
+            title=flet.Text('Удаление тега'),
+            content=flet.Text(
+                f'Вы точно хотите удалить тег {tag_control.content.value}? Будут удалены все принадлежности с этим тегом!'
+            ),
+            actions=[
+                flet.ElevatedButton('Отмена', icon=flet.icons.CANCEL, on_click=_on_cancel_button_callback),
+                flet.ElevatedButton('Удалить', icon=flet.icons.DELETE, color=flet.colors.RED, on_click=_confirm_button_callback)
+            ]
+        )
+
+        page.open(remove_tag_dialog)
+
     async def _on_cancel_button_callback(event: flet.ControlEvent):
         await page.pubsub.unsubscribe_topic_async('dialog_confirm_button_action')
         print('unsubscribed from "dialog_confirm_button_action"')
@@ -77,7 +103,7 @@ async def _on_tag_click_callback(event: flet.ControlEvent):
         ],
         value=tag_control.bgcolor
     )
-    delete_button = flet.ElevatedButton('Удалить тег', icon=flet.icons.DELETE, color=flet.colors.RED)
+    delete_button = flet.ElevatedButton('Удалить тег', icon=flet.icons.DELETE, color=flet.colors.RED, on_click=_remove_tag_callback)
 
     dialog = flet.AlertDialog(
         title=flet.Text(tag_control.content.value),
@@ -104,7 +130,19 @@ def populate_inner_tags():
     global inner_tags
 
     tags = tag_manager.get_tags()
-    if not tags:
+    if not tags and inner_tags.alignment == flet.alignment.top_left:
+        inner_tags.alignment = flet.alignment.center
+        inner_tags.content = flet.Column(
+            alignment=flet.MainAxisAlignment.CENTER,
+            horizontal_alignment=flet.CrossAxisAlignment.CENTER,
+            controls=[
+                flet.Icon(flet.icons.QUESTION_MARK, color=flet.colors.BLACK, opacity=0.5),
+                flet.Text('У вас пока нет тегов', opacity=0.5, weight=flet.FontWeight.W_500)
+            ]
+        )
+        inner_tags.update()
+        return inner_tags
+    elif not tags and inner_tags.alignment == flet.alignment.center:
         return inner_tags
     else:
         inner_tags.alignment = flet.alignment.top_left

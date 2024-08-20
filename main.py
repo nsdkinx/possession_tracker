@@ -30,4 +30,4 @@ async def main(page: flet.Page):
 
 
 if __name__ == "__main__":
-    asyncio.run(flet.app_async(main, host='192.168.1.100', port=1234, view=flet.AppView.WEB_BROWSER, assets_dir='assets/'))
+    asyncio.run(flet.app_async(main, assets_dir='assets/'))
