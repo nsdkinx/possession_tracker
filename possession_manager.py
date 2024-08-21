@@ -40,3 +40,11 @@ class PossessionManager:
             if possession.name == name:
                 return possession
         return None
+    
+    def edit_possession(self, possession: Possession, name: str, group: Group, tags: list[Tag]) -> Possession:
+        for possession_ in self._possessions:
+            if possession_.name == possession.name:
+                possession_.name = name
+                possession_.group = group
+                possession.tags = tags
+                return possession_

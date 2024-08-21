@@ -1,5 +1,6 @@
 import flet
 
+from possession import Possession
 from tag import Tag
 from ui_providers import (
     get_appbar,
@@ -10,6 +11,7 @@ from managers import possession_manager, group_manager, tag_manager
 
 from ui_possession import get_possession_widget
 
+from ui_tag import get_tag_widget
 from ui_validation import must_be_non_empty_string
 
 confirm_button = flet.Ref[flet.ElevatedButton]()
@@ -40,13 +42,13 @@ def populate_inner_possessions():
                 initially_expanded=True,
                 title=flet.Text(possession.group.name),
                 subtitle=flet.Text('? принадлежностей'),
-                controls=[get_possession_widget(possession)]
+                controls=[get_possession_widget(possession, on_edit_click=_on_edit_possession_callback)]
             )
         else:
             expansion_tiles[possession.group.name].controls.append(
-                get_possession_widget(possession)
+                get_possession_widget(possession, on_edit_click=_on_edit_possession_callback)
             )
-    
+
     i = 1
     for expansion_tile in expansion_tiles.values():
         expansion_tile.subtitle.value = f'{len(expansion_tile.controls)} принадлежностей'
@@ -108,6 +110,11 @@ async def _on_confirm_button_action_message(topic: str, message: str):
 
 async def add_button_callback(event: flet.ControlEvent):
     page: flet.Page = event.page
+
+    if not group_manager.get_groups():
+        page.open(flet.SnackBar(flet.Text('Вы ещё не добавили ни одной группы!')))
+        return
+
     await page.pubsub.subscribe_topic_async(
         topic="dialog_confirm_button_action",
         handler=_on_confirm_button_action_message
@@ -123,7 +130,31 @@ async def add_button_callback(event: flet.ControlEvent):
         else:
             item.checked = True
 
+        item.update()
         tag_popup.current.update()
+        _update_tag_chooser_button_content()
+
+    tag_chooser_button_content = flet.Container(
+        content=flet.Text('Добавить теги...')
+    )
+
+    def _update_tag_chooser_button_content() -> flet.Container:
+        selected_tags = [tag_manager.get_tag_by_name(item.content.value) for item in tag_popup.current.items if item.checked == True]
+        print(f'{selected_tags =}')
+        if not selected_tags:
+            tag_chooser_button_content.content = flet.Container(
+                content=flet.Text('Добавить теги...')
+            )
+            tag_chooser_button_content.update()
+            tag_popup.current.update()
+            return tag_chooser_button_content
+
+        tag_chooser_button_content.content = flet.Row([
+            get_tag_widget(tag) for tag in selected_tags
+        ])
+        tag_chooser_button_content.update()
+        tag_popup.current.update()
+        return tag_chooser_button_content
 
     page.open(
         flet.AlertDialog(
@@ -145,7 +176,7 @@ async def add_button_callback(event: flet.ControlEvent):
                     ),
                     flet.PopupMenuButton(
                         ref=tag_popup,
-                        content=flet.Text('Выбрать теги...'),
+                        content=tag_chooser_button_content,
                         items=[
                             flet.PopupMenuItem(content=flet.Text(tag.label, color=tag.color), on_click=_on_select_tag_callback)
                             for tag in tag_manager.get_tags()
@@ -160,6 +191,99 @@ async def add_button_callback(event: flet.ControlEvent):
             ]
         )
     )
+
+
+async def _on_edit_possession_callback(event: flet.ControlEvent):
+    page: flet.Page = event.page
+    possession_control = event.control.parent.parent
+    possession: Possession = possession_manager.get_possession_by_name(possession_control.title.value)
+
+    new_name_field = flet.Ref[flet.TextField]()
+    new_group_dropdown = flet.Ref[flet.Dropdown]()
+    new_tag_popup = flet.Ref[flet.PopupMenuButton]()
+
+    new_tag_chooser_button_content = flet.Container(
+        content=flet.Text('Добавить теги...')
+    )
+
+    async def _new_on_select_tag_callback(event: flet.ControlEvent):
+        item: flet.PopupMenuItem = event.control
+        tag = tag_manager.get_tag_by_name(item.content.value)
+
+        if item.checked:
+            item.checked = False
+        else:
+            item.checked = True
+
+        item.update()
+        new_tag_popup.current.update()
+        _update_new_tag_chooser_button_content()
+
+    def _update_new_tag_chooser_button_content() -> flet.Container:
+        selected_tags = [tag_manager.get_tag_by_name(item.content.value) for item in new_tag_popup.current.items if item.checked == True]
+        print(f'{selected_tags =}')
+        if not selected_tags:
+            new_tag_chooser_button_content.content = flet.Container(
+                content=flet.Text('Добавить теги...')
+            )
+            new_tag_chooser_button_content.update()
+            new_tag_popup.current.update()
+            return new_tag_chooser_button_content
+
+        new_tag_chooser_button_content.content = flet.Row([
+            get_tag_widget(tag) for tag in selected_tags
+        ])
+        new_tag_chooser_button_content.update()
+        new_tag_popup.current.update()
+        return new_tag_chooser_button_content
+
+    async def _cancel_button_callback(_: flet.ControlEvent):
+        return page.close(edit_possession_dialog)
+
+    async def _confirm_button_callback(_: flet.ControlEvent):
+        new_name = new_name_field.current.value
+        new_group = group_manager.get_group_by_name(new_group_dropdown.current.value)
+        new_tags = [tag_manager.get_tag_by_name(item.content.value) for item in new_tag_popup.current.items if item.checked == True]
+        possession_manager.edit_possession(possession, new_name, new_group, new_tags)
+        page.open(flet.SnackBar(flet.Text('Принадлежность изменена!')))
+        page.close(edit_possession_dialog)
+        populate_inner_possessions()
+
+    edit_possession_dialog = flet.AlertDialog(
+        modal=True,
+        title=flet.Text(possession.name),
+
+        content=flet.Column(
+            tight=True,
+            controls=[
+                flet.TextField(label='Название', value=possession.name, ref=new_name_field),
+                flet.Dropdown(
+                        ref=new_group_dropdown,
+                        label="Группа",
+                        options=[
+                            flet.dropdown.Option(text=group.name, key=group.name)
+                            for group in group_manager.get_groups()
+                        ],
+                        value=possession.group.name
+                    ),
+                    flet.PopupMenuButton(
+                        ref=new_tag_popup,
+                        content=new_tag_chooser_button_content,
+                        items=[
+                            flet.PopupMenuItem(content=flet.Text(tag.label, color=tag.color), on_click=_new_on_select_tag_callback)
+                            for tag in tag_manager.get_tags()
+                        ]
+                    )
+            ]
+        ),
+
+        actions=[
+            flet.ElevatedButton('Отмена', icon=flet.icons.CANCEL, on_click=_cancel_button_callback),
+            flet.ElevatedButton('Применить', icon=flet.icons.DONE, on_click=_confirm_button_callback)
+        ]
+    )
+
+    page.open(edit_possession_dialog)
 
 
 root_view = flet.View(

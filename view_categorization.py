@@ -112,7 +112,7 @@ async def _on_tag_click_callback(event: flet.ControlEvent):
         label='Цвет',
         options=[
             flet.dropdown.Option(
-                key=color_,
+                key=color_.name,
                 content=flet.Text(f'{color_.name}', color=color_.value)
             )
             for color_ in TagColor
@@ -328,7 +328,7 @@ async def add_tag_button_callback(event: flet.ControlEvent):
         label='Цвет',
         options=[
             flet.dropdown.Option(
-                key=color_,
+                key=color_.name,
                 content=flet.Text(f'{color_.name}', color=color_.value)
             )
             for color_ in TagColor
