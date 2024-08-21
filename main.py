@@ -3,8 +3,11 @@ import logging
 import asyncio
 import flet
 
-from view_root import root_view
-from view_categorization import categorization_view
+from group_manager import GroupManager
+from possession_manager import PossessionManager
+from tag_manager import TagManager
+
+import managers
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -12,7 +15,16 @@ logger = logging.getLogger(__name__)
 
 
 async def main(page: flet.Page):
+    managers.possession_manager = PossessionManager(page.client_storage)
+    managers.group_manager = GroupManager()
+    managers.tag_manager = TagManager()
+    
+    await managers.possession_manager.prepare()
+
     page.title = 'Мои принадлежности'
+
+    from view_root import root_view
+    from view_categorization import categorization_view
 
     views: dict[str, flet.View] = {
         '/': root_view,
