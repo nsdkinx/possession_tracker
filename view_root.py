@@ -258,22 +258,22 @@ async def _on_edit_possession_callback(event: flet.ControlEvent):
             controls=[
                 flet.TextField(label='Название', value=possession.name, ref=new_name_field),
                 flet.Dropdown(
-                        ref=new_group_dropdown,
-                        label="Группа",
-                        options=[
-                            flet.dropdown.Option(text=group.name, key=group.name)
-                            for group in group_manager.get_groups()
-                        ],
-                        value=possession.group.name
-                    ),
-                    flet.PopupMenuButton(
-                        ref=new_tag_popup,
-                        content=new_tag_chooser_button_content,
-                        items=[
-                            flet.PopupMenuItem(content=flet.Text(tag.label, color=tag.color), on_click=_new_on_select_tag_callback)
-                            for tag in tag_manager.get_tags()
-                        ]
-                    )
+                    ref=new_group_dropdown,
+                    label="Группа",
+                    options=[
+                        flet.dropdown.Option(text=group.name, key=group.name)
+                        for group in group_manager.get_groups()
+                    ],
+                    value=possession.group.name
+                ),
+                flet.PopupMenuButton(
+                    ref=new_tag_popup,
+                    content=new_tag_chooser_button_content,
+                    items=[
+                        flet.PopupMenuItem(content=flet.Text(tag.label, color=tag.color), on_click=_new_on_select_tag_callback)
+                        for tag in tag_manager.get_tags()
+                    ]
+                )
             ]
         ),
 

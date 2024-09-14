@@ -3,32 +3,28 @@ import logging
 import asyncio
 import flet
 
-from group_manager import GroupManager
-from possession_manager import PossessionManager
-from tag_manager import TagManager
+from possession_tracker.database import Database
 
-import managers
+from possession_tracker.views.root import create_root_view
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
 
 async def main(page: flet.Page):
-    managers.possession_manager = PossessionManager(page.client_storage)
-    managers.group_manager = GroupManager()
-    managers.tag_manager = TagManager()
-    
-    await managers.possession_manager.prepare()
-
     page.title = 'Мои принадлежности'
 
-    from view_root import root_view
-    from view_categorization import categorization_view
+    database = Database(page.client_storage)
+
+    if await database.is_first_run():
+        await database.reset_or_create_database()
+
+    root_view = await create_root_view(database, page)
 
     views: dict[str, flet.View] = {
         '/': root_view,
-        '/categorization': categorization_view
+        # '/categorization': categorization_view
     }
 
     async def _on_route_change(event: flet.RouteChangeEvent):
@@ -51,4 +47,4 @@ async def main(page: flet.Page):
 
 
 if __name__ == "__main__":
-    asyncio.run(flet.app_async(main, view=None, host='192.168.1.100', port='1234', assets_dir='assets/'))
+    asyncio.run(flet.app_async(main, assets_dir='assets/'))

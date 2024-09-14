@@ -1,6 +1,6 @@
 import flet
 
-from ui_callbacks import (
+from possession_tracker.ui.callbacks import (
     on_navigation_bar_change
 )
 
